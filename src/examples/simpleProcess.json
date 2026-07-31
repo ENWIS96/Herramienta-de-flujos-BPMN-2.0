@@ -1,0 +1,36 @@
+{
+  "process": {
+    "id": "simple-process",
+    "name": "Proceso simple",
+    "lanes": [
+      {
+        "id": "main",
+        "name": "Principal"
+      }
+    ],
+    "elements": [
+      {
+        "id": "start",
+        "type": "startEvent",
+        "name": "Inicio",
+        "lane": "main"
+      },
+      {
+        "id": "task1",
+        "type": "task",
+        "name": "Ejecutar tarea",
+        "lane": "main"
+      },
+      {
+        "id": "end",
+        "type": "endEvent",
+        "name": "Fin",
+        "lane": "main"
+      }
+    ],
+    "flows": [
+      { "from": "start", "to": "task1" },
+      { "from": "task1", "to": "end" }
+    ]
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "process": {
+    "id": "gateway-process",
+    "name": "Proceso con gateway",
+    "lanes": [
+      {
+        "id": "ops",
+        "name": "Operaciones"
+      }
+    ],
+    "elements": [
+      {
+        "id": "start",
+        "type": "startEvent",
+        "name": "Inicio",
+        "lane": "ops"
+      },
+      {
+        "id": "validate",
+        "type": "userTask",
+        "name": "Validar",
+        "lane": "ops"
+      },
+      {
+        "id": "decision",
+        "type": "exclusiveGateway",
+        "name": "¿Válido?",
+        "lane": "ops"
+      },
+      {
+        "id": "reject",
+        "type": "task",
+        "name": "Rechazar",
+        "lane": "ops"
+      },
+      {
+        "id": "process",
+        "type": "serviceTask",
+        "name": "Procesar",
+        "lane": "ops"
+      },
+      {
+        "id": "end",
+        "type": "endEvent",
+        "name": "Fin",
+        "lane": "ops"
+      }
+    ],
+    "flows": [
+      { "from": "start", "to": "validate" },
+      { "from": "validate", "to": "decision" },
+      { "from": "decision", "to": "reject", "label": "No" },
+      { "from": "decision", "to": "process", "label": "Sí" },
+      { "from": "reject", "to": "end" },
+      { "from": "process", "to": "end" }
+    ]
+  }
+}

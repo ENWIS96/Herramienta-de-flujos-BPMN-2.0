@@ -1,0 +1,91 @@
+{
+  "process": {
+    "id": "dpf-process",
+    "name": "Proceso de apertura DPF",
+    "lanes": [
+      {
+        "id": "cliente",
+        "name": "Cliente"
+      },
+      {
+        "id": "creatio",
+        "name": "Creatio"
+      },
+      {
+        "id": "servicio",
+        "name": "Servicio"
+      },
+      {
+        "id": "core",
+        "name": "Core Bancario"
+      }
+    ],
+    "elements": [
+      {
+        "id": "start",
+        "type": "startEvent",
+        "name": "Inicio",
+        "lane": "cliente"
+      },
+      {
+        "id": "solicitar",
+        "type": "userTask",
+        "name": "Solicitar DPF",
+        "lane": "cliente"
+      },
+      {
+        "id": "validar",
+        "type": "serviceTask",
+        "name": "Validar cliente",
+        "lane": "creatio"
+      },
+      {
+        "id": "valido",
+        "type": "exclusiveGateway",
+        "name": "¿Cliente válido?",
+        "lane": "creatio"
+      },
+      {
+        "id": "rechazar",
+        "type": "task",
+        "name": "Notificar rechazo",
+        "lane": "cliente"
+      },
+      {
+        "id": "crear",
+        "type": "serviceTask",
+        "name": "Crear producto",
+        "lane": "creatio"
+      },
+      {
+        "id": "notificar",
+        "type": "sendTask",
+        "name": "Notificar servicio",
+        "lane": "servicio"
+      },
+      {
+        "id": "registrar",
+        "type": "serviceTask",
+        "name": "Registrar cuenta",
+        "lane": "core"
+      },
+      {
+        "id": "end",
+        "type": "endEvent",
+        "name": "Fin",
+        "lane": "cliente"
+      }
+    ],
+    "flows": [
+      { "from": "start", "to": "solicitar" },
+      { "from": "solicitar", "to": "validar" },
+      { "from": "validar", "to": "valido" },
+      { "from": "valido", "to": "rechazar", "label": "No" },
+      { "from": "valido", "to": "crear", "label": "Sí" },
+      { "from": "crear", "to": "notificar" },
+      { "from": "notificar", "to": "registrar" },
+      { "from": "registrar", "to": "end" },
+      { "from": "rechazar", "to": "end" }
+    ]
+  }
+}
