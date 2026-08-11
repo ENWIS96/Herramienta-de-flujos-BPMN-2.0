@@ -1,0 +1,255 @@
+{
+  "process": {
+    "id": "mantenimiento-clientes-bladex-corregido",
+    "name": "Proceso Integral de Mantenimiento de Clientes Flexcube y Novaris (Bladex)",
+    "description": "Flujo corregido y detallado para la gestión de solicitudes, asegurando la bifurcación correcta entre Flujo Comercial (con paso por RM) y Flujo de Riesgo/Otras áreas (directo a Riesgo de Crédito).",
+    "lanes": [
+      {
+        "id": "solicitante",
+        "name": "Analista Comercial / Solicitante"
+      },
+      {
+        "id": "rm",
+        "name": "Etapa RM (Validación Intermedia)"
+      },
+      {
+        "id": "riesgo_credito",
+        "name": "Riesgo de Crédito (VP)"
+      },
+      {
+        "id": "control_riesgo",
+        "name": "Control de Riesgo"
+      },
+      {
+        "id": "creatio_core",
+        "name": "Creatio / Motor de Procesos & Core"
+      }
+    ],
+    "elements": [
+      {
+        "id": "start",
+        "type": "startEvent",
+        "name": "Inicio de Sesión en Creatio",
+        "lane": "solicitante"
+      },
+      {
+        "id": "validar_ultimus_service",
+        "type": "serviceTask",
+        "name": "Validar exclusión en Ultimus (New Customer, Limit Modifications, Annual Review, Cancelations)",
+        "lane": "creatio_core"
+      },
+      {
+        "id": "gateway_ultimus",
+        "type": "exclusiveGateway",
+        "name": "¿Tiene flujos activos en Ultimus?",
+        "lane": "creatio_core"
+      },
+      {
+        "id": "bloquear_solicitud",
+        "type": "task",
+        "name": "Bloquear solicitud por conflicto de flujos concurrentes (Fin)",
+        "lane": "solicitante"
+      },
+      {
+        "id": "diligenciar_form",
+        "type": "userTask",
+        "name": "Diligenciar formulario estandarizado (Selección Flexcube/Novaris, categoría y metadatos)",
+        "lane": "solicitante"
+      },
+      {
+        "id": "enviar_solicitud",
+        "type": "task",
+        "name": "Enviar solicitud y registrar metadatos iniciales",
+        "lane": "solicitante"
+      },
+      {
+        "id": "gateway_tipo_flujo",
+        "type": "exclusiveGateway",
+        "name": "¿Qué tipo de flujo es?",
+        "lane": "solicitante"
+      },
+      {
+        "id": "validar_rm",
+        "type": "userTask",
+        "name": "Validar datos y consistencia de la solicitud (Flujo Comercial)",
+        "lane": "rm"
+      },
+      {
+        "id": "gateway_rm",
+        "type": "exclusiveGateway",
+        "name": "¿Información correcta en RM?",
+        "lane": "rm"
+      },
+      {
+        "id": "revisar_credito",
+        "type": "userTask",
+        "name": "Revisar solicitud de mantenimiento crítico",
+        "lane": "riesgo_credito"
+      },
+      {
+        "id": "gateway_credito",
+        "type": "exclusiveGateway",
+        "name": "¿Aprueba Riesgo de Crédito?",
+        "lane": "riesgo_credito"
+      },
+      {
+        "id": "rechazar",
+        "type": "task",
+        "name": "Registrar rechazo y finalizar solicitud",
+        "lane": "riesgo_credito"
+      },
+      {
+        "id": "analizar_control",
+        "type": "userTask",
+        "name": "Analizar y revisar conformidad final de la solicitud",
+        "lane": "control_riesgo"
+      },
+      {
+        "id": "gateway_control",
+        "type": "exclusiveGateway",
+        "name": "¿Información correcta en Control de Riesgo?",
+        "lane": "control_riesgo"
+      },
+      {
+        "id": "evaluar_sistema",
+        "type": "exclusiveGateway",
+        "name": "Evaluar Sistema Origen (Flexcube vs Novaris)",
+        "lane": "creatio_core"
+      },
+      {
+        "id": "actualizar_flexcube",
+        "type": "serviceTask",
+        "name": "Actualizar en línea Flexcube vía API / Servicio Web automático",
+        "lane": "creatio_core"
+      },
+      {
+        "id": "actualizar_novaris",
+        "type": "task",
+        "name": "Registrar aprobación estructurada para aplicación operativa manual en Novaris",
+        "lane": "creatio_core"
+      },
+      {
+        "id": "notificar_cierre",
+        "type": "sendTask",
+        "name": "Enviar notificación por correo con semaforización y cierre de SLA",
+        "lane": "creatio_core"
+      },
+      {
+        "id": "end",
+        "type": "endEvent",
+        "name": "Fin del Proceso",
+        "lane": "creatio_core"
+      }
+    ],
+    "flows": [
+      {
+        "from": "start",
+        "to": "validar_ultimus_service"
+      },
+      {
+        "from": "validar_ultimus_service",
+        "to": "gateway_ultimus"
+      },
+      {
+        "from": "gateway_ultimus",
+        "to": "bloquear_solicitud",
+        "label": "Sí (Existen flujos activos)"
+      },
+      {
+        "from": "gateway_ultimus",
+        "to": "diligenciar_form",
+        "label": "No (Libre para operar)"
+      },
+      {
+        "from": "bloquear_solicitud",
+        "to": "end"
+      },
+      {
+        "from": "diligenciar_form",
+        "to": "enviar_solicitud"
+      },
+      {
+        "from": "enviar_solicitud",
+        "to": "gateway_tipo_flujo"
+      },
+      {
+        "from": "gateway_tipo_flujo",
+        "to": "validar_rm",
+        "label": "Flujo Comercial"
+      },
+      {
+        "from": "gateway_tipo_flujo",
+        "to": "revisar_credito",
+        "label": "Flujo Riesgo / Otras Áreas"
+      },
+      {
+        "from": "validar_rm",
+        "to": "gateway_rm"
+      },
+      {
+        "from": "gateway_rm",
+        "to": "diligenciar_form",
+        "label": "No (Devuelto al solicitante para edición)"
+      },
+      {
+        "from": "gateway_rm",
+        "to": "revisar_credito",
+        "label": "Sí"
+      },
+      {
+        "from": "revisar_credito",
+        "to": "gateway_credito"
+      },
+      {
+        "from": "gateway_credito",
+        "to": "rechazar",
+        "label": "No"
+      },
+      {
+        "from": "gateway_credito",
+        "to": "analizar_control",
+        "label": "Sí"
+      },
+      {
+        "from": "analizar_control",
+        "to": "gateway_control"
+      },
+      {
+        "from": "gateway_control",
+        "to": "diligenciar_form",
+        "label": "No - Devuelto con ajustes"
+      },
+      {
+        "from": "gateway_control",
+        "to": "evaluar_sistema",
+        "label": "Sí, sin ajustes (Aprobado)"
+      },
+      {
+        "from": "evaluar_sistema",
+        "to": "actualizar_flexcube",
+        "label": "Flexcube"
+      },
+      {
+        "from": "evaluar_sistema",
+        "to": "actualizar_novaris",
+        "label": "Novaris"
+      },
+      {
+        "from": "actualizar_flexcube",
+        "to": "notificar_cierre"
+      },
+      {
+        "from": "actualizar_novaris",
+        "to": "notificar_cierre"
+      },
+      {
+        "from": "notificar_cierre",
+        "to": "end"
+      },
+      {
+        "from": "rechazar",
+        "to": "end"
+      }
+    ]
+  }
+}
